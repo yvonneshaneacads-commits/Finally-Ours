@@ -1,0 +1,1 @@
+delete from public.universe_spaces where id = '575365e2-8495-4aa1-93ea-0f8797429b48';

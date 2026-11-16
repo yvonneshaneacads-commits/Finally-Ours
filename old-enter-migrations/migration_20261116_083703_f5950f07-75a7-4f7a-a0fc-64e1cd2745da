@@ -1,0 +1,34 @@
+update public.universe_spaces
+set data = data || jsonb_build_object(
+  'events', '[]'::jsonb,
+  'rituals', '[]'::jsonb,
+  'moods', '[]'::jsonb,
+  'loveNotes', '[]'::jsonb,
+  'prayers', '[]'::jsonb,
+  'intentions', '[]'::jsonb,
+  'prayerSessions', '[]'::jsonb,
+  'spiritualReflections', '[]'::jsonb,
+  'readingPlans', '[]'::jsonb,
+  'trips', '[]'::jsonb,
+  'goals', '[]'::jsonb,
+  'moneyTalks', '[]'::jsonb,
+  'dreams', '[]'::jsonb,
+  'memories', '[]'::jsonb,
+  'openWhen', '[]'::jsonb,
+  'reflections', '[]'::jsonb,
+  'lifeNote', '',
+  'settings', (data->'settings') || jsonb_build_object('anniversary', ''),
+  'people', jsonb_build_object(
+    'you', (data->'people'->'you') || jsonb_build_object('name', 'Yvonne', 'nickname', 'Onnie'),
+    'me', (data->'people'->'me') || jsonb_build_object('name', 'Navjot', 'nickname', 'Navi')
+  )
+)
+where id = '588fca8d-8df3-4b4c-a944-a5ec5829ba08';
+
+update public.universe_members
+set name = 'Yvonne', nickname = 'Onnie'
+where space_id = '588fca8d-8df3-4b4c-a944-a5ec5829ba08' and slot = 'you';
+
+update public.universe_members
+set name = 'Navjot', nickname = 'Navi'
+where space_id = '588fca8d-8df3-4b4c-a944-a5ec5829ba08' and slot = 'me';

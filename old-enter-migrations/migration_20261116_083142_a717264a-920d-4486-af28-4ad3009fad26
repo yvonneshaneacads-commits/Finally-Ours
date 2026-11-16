@@ -1,0 +1,1 @@
+delete from public.universe_spaces where id = 'd2133b00-a8f4-474f-b487-b22e85f7f00d' and join_code = '4B093E';

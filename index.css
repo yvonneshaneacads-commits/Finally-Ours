@@ -1,0 +1,421 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Paper & ink */
+    --background: 40 52% 94%;
+    --foreground: 26 27% 24%;
+
+    --card: 43 76% 98%;
+    --card-foreground: 26 27% 24%;
+
+    --popover: 42 67% 98%;
+    --popover-foreground: 26 27% 24%;
+
+    /* Sage / pistachio */
+    --primary: 95 21% 44%;
+    --primary-foreground: 42 60% 98%;
+
+    --secondary: 44 66% 88%;
+    --secondary-foreground: 26 30% 26%;
+
+    --muted: 39 33% 91%;
+    --muted-foreground: 28 14% 45%;
+
+    --accent: 18 68% 91%;
+    --accent-foreground: 16 38% 30%;
+
+    --destructive: 6 58% 56%;
+    --destructive-foreground: 40 60% 98%;
+
+    --border: 34 30% 82%;
+    --input: 36 29% 85%;
+    --ring: 95 24% 52%;
+
+    --radius: 1.4rem;
+
+    /* Little universe palette */
+    --sage: 95 24% 46%;
+    --sage-soft: 96 30% 87%;
+    --butter: 44 76% 84%;
+    --butter-soft: 46 78% 93%;
+    --peach: 20 70% 88%;
+    --peach-soft: 22 78% 94%;
+    --powder: 201 54% 87%;
+    --powder-soft: 200 62% 94%;
+    --blush: 348 54% 91%;
+    --lilac: 258 38% 91%;
+    --coral: 8 62% 62%;
+    --ink: 26 30% 22%;
+    --ink-soft: 27 16% 42%;
+    --paper: 42 62% 97%;
+    --paper-deep: 38 45% 92%;
+
+    --sidebar: 42 64% 95%;
+    --sidebar-foreground: 26 24% 30%;
+
+    /* Effects */
+    --shadow-card: 0 16px 36px -24px hsl(20 40% 32% / 0.5), 0 2px 0 0 hsl(36 45% 80% / 0.6);
+    --shadow-note: 0 12px 24px -16px hsl(26 30% 30% / 0.5);
+    --shadow-lift: 0 18px 40px -24px hsl(26 30% 30% / 0.55);
+    --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+  }
+
+  .dark {
+    --background: 30 16% 12%;
+    --foreground: 42 34% 90%;
+
+    --card: 30 14% 17%;
+    --card-foreground: 42 34% 90%;
+
+    --popover: 30 14% 17%;
+    --popover-foreground: 42 34% 90%;
+
+    --primary: 95 26% 64%;
+    --primary-foreground: 30 20% 12%;
+
+    --secondary: 38 18% 24%;
+    --secondary-foreground: 42 30% 92%;
+
+    --muted: 32 14% 22%;
+    --muted-foreground: 40 14% 68%;
+
+    --accent: 20 18% 26%;
+    --accent-foreground: 40 30% 92%;
+
+    --destructive: 6 48% 48%;
+    --destructive-foreground: 42 34% 94%;
+
+    --border: 32 13% 28%;
+    --input: 32 13% 28%;
+    --ring: 95 30% 58%;
+
+    --sage: 95 26% 62%;
+    --sage-soft: 95 16% 26%;
+    --butter: 44 30% 30%;
+    --butter-soft: 44 20% 23%;
+    --peach: 20 20% 28%;
+    --peach-soft: 20 16% 23%;
+    --powder: 201 22% 28%;
+    --powder-soft: 201 18% 23%;
+    --blush: 348 18% 27%;
+    --lilac: 258 16% 27%;
+    --coral: 8 46% 62%;
+    --ink: 42 30% 90%;
+    --ink-soft: 42 14% 68%;
+    --paper: 30 15% 15%;
+    --paper-deep: 32 14% 20%;
+
+    --sidebar: 30 15% 14%;
+    --sidebar-foreground: 42 28% 88%;
+
+    --shadow-card: 0 10px 30px -16px hsl(0 0% 0% / 0.7), 0 1px 0 0 hsl(0 0% 100% / 0.05);
+    --shadow-note: 0 12px 24px -14px hsl(0 0% 0% / 0.7);
+    --shadow-lift: 0 18px 40px -20px hsl(0 0% 0% / 0.8);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-height: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Quicksand", ui-rounded, "Segoe UI", sans-serif;
+    font-feature-settings: "ss01" on;
+    letter-spacing: 0.005em;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: hsl(var(--butter));
+    color: hsl(var(--ink));
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: "Quicksand", ui-rounded, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  :focus-visible {
+    outline: 2px dashed hsl(var(--sage));
+    outline-offset: 3px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+}
+
+@layer components {
+  /* Paper grain overlay */
+  .grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.16;
+    mix-blend-mode: multiply;
+    background-image: var(--grain);
+    border-radius: inherit;
+  }
+
+  .dark .grain::before {
+    opacity: 0.1;
+    mix-blend-mode: screen;
+  }
+
+  .paper-card {
+    @apply relative rounded-[1.4rem] border bg-card;
+    box-shadow: var(--shadow-card);
+    border-color: hsl(var(--border) / 0.85);
+  }
+
+  .hand {
+    font-family: "Caveat", "Quicksand", cursive;
+    letter-spacing: 0.01em;
+  }
+
+  .label-caps {
+    @apply text-[0.62rem] font-bold uppercase tracking-[0.16em] text-muted-foreground;
+  }
+
+  /* Faint dotted grid used on side panels */
+  .dotty {
+    background-image: radial-gradient(hsl(var(--border) / 0.7) 1px, transparent 1px);
+    background-size: 14px 14px;
+  }
+
+  /* Gingham / checker scrapbook paper */
+  .gingham {
+    background-image:
+      linear-gradient(45deg, hsl(var(--blush) / 0.55) 25%, transparent 25%, transparent 75%, hsl(var(--blush) / 0.55) 75%),
+      linear-gradient(45deg, hsl(var(--blush) / 0.55) 25%, transparent 25%, transparent 75%, hsl(var(--blush) / 0.55) 75%);
+    background-size: 14px 14px;
+    background-position: 0 0, 7px 7px;
+  }
+
+  .washi {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      hsl(var(--butter) / 0.85) 0 5px,
+      hsl(var(--butter) / 0.35) 5px 10px
+    );
+  }
+
+  .tilt-left {
+    transform: rotate(-1.6deg);
+  }
+  .tilt-right {
+    transform: rotate(1.8deg);
+  }
+
+  .halo {
+    box-shadow: 0 0 0 6px hsl(var(--card)), 0 0 0 7px hsl(var(--border));
+  }
+
+  .scroll-soft {
+    scrollbar-width: thin;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+
+.motion-calm *,
+.motion-calm *::before,
+.motion-calm *::after {
+  animation: none !important;
+}
+
+@layer components {
+  /* Soft page entrance */
+  .page-enter {
+    animation: page-in 0.5s cubic-bezier(0.33, 1, 0.68, 1) both;
+  }
+
+  .stagger-fade > * {
+    animation: page-in 0.55s cubic-bezier(0.33, 1, 0.68, 1) both;
+  }
+  .stagger-fade > *:nth-child(1) { animation-delay: 0.02s; }
+  .stagger-fade > *:nth-child(2) { animation-delay: 0.06s; }
+  .stagger-fade > *:nth-child(3) { animation-delay: 0.1s; }
+  .stagger-fade > *:nth-child(4) { animation-delay: 0.14s; }
+  .stagger-fade > *:nth-child(5) { animation-delay: 0.18s; }
+  .stagger-fade > *:nth-child(6) { animation-delay: 0.22s; }
+  .stagger-fade > *:nth-child(7) { animation-delay: 0.26s; }
+  .stagger-fade > *:nth-child(8) { animation-delay: 0.3s; }
+  .stagger-fade > *:nth-child(9) { animation-delay: 0.34s; }
+
+  /* Ambient petals + sparkles */
+  .ambient {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .petal {
+    position: absolute;
+    top: -8vh;
+    width: 9px;
+    height: 9px;
+    border-radius: 999px 0 999px 0;
+    background: hsl(var(--blush));
+    box-shadow: 0 0 6px hsl(var(--blush) / 0.7);
+    opacity: 0;
+    animation: petal-fall 22s linear infinite;
+    will-change: transform, opacity;
+  }
+
+  .petal:nth-child(3n) {
+    background: hsl(var(--butter));
+    box-shadow: 0 0 6px hsl(var(--butter) / 0.8);
+  }
+
+  .petal:nth-child(3n + 1) {
+    background: hsl(var(--powder));
+    box-shadow: 0 0 6px hsl(var(--powder) / 0.6);
+  }
+
+  .spark-dot {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: hsl(var(--card));
+    box-shadow: 0 0 8px 1px hsl(var(--butter));
+    animation: twinkle 6s ease-in-out infinite;
+  }
+
+  @keyframes petal-fall {
+    0% {
+      transform: translate3d(0, -6vh, 0) rotate(0deg);
+      opacity: 0;
+    }
+    12% {
+      opacity: 0.55;
+    }
+    55% {
+      transform: translate3d(5vw, 52vh, 0) rotate(180deg);
+    }
+    100% {
+      transform: translate3d(-3vw, 108vh, 0) rotate(340deg);
+      opacity: 0;
+    }
+  }
+
+  .hover-lift {
+    transition:
+      transform 0.25s cubic-bezier(0.33, 1, 0.68, 1),
+      box-shadow 0.25s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
+  }
+
+  /* A little shimmer for progress and badges */
+  .shimmer-bar {
+    background-image: linear-gradient(
+      100deg,
+      transparent 20%,
+      hsl(var(--card) / 0.55) 45%,
+      transparent 70%
+    );
+    background-size: 220% 100%;
+  }
+}
+
+/* Calmer typography + airier rhythm */
+body {
+  line-height: 1.55;
+  letter-spacing: 0.012em;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  line-height: 1.18;
+  letter-spacing: -0.012em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient {
+    display: none;
+  }
+}
+
+.motion-calm .ambient {
+  display: none;
+}
+
+
+@layer components {
+  /* Scrapbook stitching around cards */
+  .stitched {
+    position: relative;
+  }
+  .stitched::after {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border-radius: inherit;
+    border: 1px dashed hsl(var(--border) / 0.55);
+    pointer-events: none;
+  }
+
+  /* Hand-drawn wave under page titles */
+  .title-wave {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='42' height='6' viewBox='0 0 42 6'%3E%3Cpath d='M1 4.2c5-3.4 9 3 14 0s9 3 14 0 9 3 12 0' fill='none' stroke='%23A9BE95' stroke-width='1.7' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: repeat-x;
+    background-position: 0 100%;
+    padding-bottom: 0.3rem;
+  }
+
+  /* A sticker-ish label */
+  .sticker {
+    border: 2px solid hsl(var(--card));
+    box-shadow: 0 3px 0 0 hsl(var(--border) / 0.6);
+  }
+}

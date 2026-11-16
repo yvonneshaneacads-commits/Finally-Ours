@@ -1,0 +1,286 @@
+-- Our Little Universe: two-person private spaces
+create table if not exists public.universe_spaces (
+  id uuid primary key default gen_random_uuid(),
+  name text not null default 'Our Little Universe',
+  join_code text not null unique,
+  data jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.universe_members (
+  id uuid primary key default gen_random_uuid(),
+  space_id uuid not null references public.universe_spaces(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  slot text not null check (slot in ('you','me')),
+  name text not null default 'Me',
+  nickname text not null default 'Me',
+  city text not null default '',
+  country text not null default '',
+  timezone text not null default 'Asia/Manila',
+  companion text not null default 'siamese',
+  color text not null default 'sage',
+  open_from text not null default '08:00',
+  open_to text not null default '23:00',
+  created_at timestamptz not null default now(),
+  unique (space_id, user_id),
+  unique (space_id, slot)
+);
+
+create table if not exists public.universe_private (
+  id uuid primary key default gen_random_uuid(),
+  space_id uuid not null references public.universe_spaces(id) on delete cascade,
+  author_id uuid not null references auth.users(id) on delete cascade,
+  kind text not null check (kind in ('prayer','memory','reflection')),
+  payload jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists universe_members_space_idx on public.universe_members(space_id);
+create index if not exists universe_members_user_idx on public.universe_members(user_id);
+create index if not exists universe_private_space_idx on public.universe_private(space_id);
+create index if not exists universe_private_author_idx on public.universe_private(author_id);
+
+create or replace function public.universe_is_member(target_space uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.universe_members m
+    where m.space_id = target_space and m.user_id = auth.uid()
+  );
+$$;
+
+create or replace function public.universe_touch_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists universe_spaces_touch on public.universe_spaces;
+create trigger universe_spaces_touch
+  before update on public.universe_spaces
+  for each row execute function public.universe_touch_updated_at();
+
+alter table public.universe_spaces enable row level security;
+alter table public.universe_members enable row level security;
+alter table public.universe_private enable row level security;
+
+drop policy if exists universe_spaces_select on public.universe_spaces;
+create policy universe_spaces_select on public.universe_spaces
+  for select to authenticated using (public.universe_is_member(id));
+
+drop policy if exists universe_spaces_update on public.universe_spaces;
+create policy universe_spaces_update on public.universe_spaces
+  for update to authenticated
+  using (public.universe_is_member(id))
+  with check (public.universe_is_member(id));
+
+drop policy if exists universe_members_select on public.universe_members;
+create policy universe_members_select on public.universe_members
+  for select to authenticated using (public.universe_is_member(space_id));
+
+drop policy if exists universe_members_update_own on public.universe_members;
+create policy universe_members_update_own on public.universe_members
+  for update to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid());
+
+drop policy if exists universe_private_own on public.universe_private;
+create policy universe_private_own on public.universe_private
+  for all to authenticated
+  using (author_id = auth.uid())
+  with check (author_id = auth.uid() and public.universe_is_member(space_id));
+
+grant select, update on public.universe_spaces to authenticated;
+grant select, update on public.universe_members to authenticated;
+grant select, insert, update, delete on public.universe_private to authenticated;
+grant execute on function public.universe_is_member(uuid) to authenticated;
+
+create or replace function public.universe_create_space(p_me jsonb, p_data jsonb)
+returns table (space_id uuid, join_code text, slot text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+#variable_conflict use_column
+declare
+  new_space uuid;
+  candidate text;
+begin
+  if auth.uid() is null then
+    raise exception 'not authenticated';
+  end if;
+
+  loop
+    candidate := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+    exit when not exists (select 1 from public.universe_spaces s where s.join_code = candidate);
+  end loop;
+
+  insert into public.universe_spaces (name, join_code, data)
+  values ('Our Little Universe', candidate, coalesce(p_data, '{}'::jsonb))
+  returning id into new_space;
+
+  insert into public.universe_members (space_id, user_id, slot, name, nickname, city, country, timezone, companion, color, open_from, open_to)
+  values (
+    new_space, auth.uid(), 'you',
+    coalesce(nullif(p_me->>'name',''), 'Onni'),
+    coalesce(nullif(p_me->>'nickname',''), 'Onni'),
+    coalesce(p_me->>'city','Pasig'),
+    coalesce(p_me->>'country','Philippines'),
+    coalesce(p_me->>'timezone','Asia/Manila'),
+    coalesce(p_me->>'companion','siamese'),
+    coalesce(p_me->>'color','sage'),
+    coalesce(p_me->>'openFrom','08:00'),
+    coalesce(p_me->>'openTo','23:30')
+  );
+
+  return query select new_space, candidate, 'you'::text;
+end;
+$$;
+
+create or replace function public.universe_join_space(p_code text, p_me jsonb)
+returns table (space_id uuid, join_code text, slot text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+#variable_conflict use_column
+declare
+  target uuid;
+  target_code text;
+  existing text;
+  used integer;
+  assigned text;
+begin
+  if auth.uid() is null then
+    raise exception 'not authenticated';
+  end if;
+
+  select s.id, s.join_code into target, target_code
+  from public.universe_spaces s
+  where upper(s.join_code) = upper(trim(p_code));
+
+  if target is null then
+    raise exception 'code_not_found';
+  end if;
+
+  select m.slot into existing from public.universe_members m
+  where m.space_id = target and m.user_id = auth.uid();
+
+  if existing is not null then
+    return query select target, target_code, existing;
+    return;
+  end if;
+
+  select count(*) into used from public.universe_members m where m.space_id = target;
+  if used >= 2 then
+    raise exception 'space_full';
+  end if;
+
+  assigned := case when exists (
+    select 1 from public.universe_members m where m.space_id = target and m.slot = 'me'
+  ) then 'you' else 'me' end;
+
+  insert into public.universe_members (space_id, user_id, slot, name, nickname, city, country, timezone, companion, color, open_from, open_to)
+  values (
+    target, auth.uid(), assigned,
+    coalesce(nullif(p_me->>'name',''), 'Navi'),
+    coalesce(nullif(p_me->>'nickname',''), 'Navi'),
+    coalesce(p_me->>'city','Bengaluru'),
+    coalesce(p_me->>'country','India'),
+    coalesce(p_me->>'timezone','Asia/Kolkata'),
+    coalesce(p_me->>'companion','black'),
+    coalesce(p_me->>'color','powder'),
+    coalesce(p_me->>'openFrom','08:00'),
+    coalesce(p_me->>'openTo','23:30')
+  );
+
+  return query select target, target_code, assigned;
+end;
+$$;
+
+grant execute on function public.universe_create_space(jsonb, jsonb) to authenticated;
+grant execute on function public.universe_join_space(text, jsonb) to authenticated;
+
+alter publication supabase_realtime add table public.universe_spaces;
+
+-- Keepsakes storage bucket (photos + audio)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'keepsakes',
+  'keepsakes',
+  false,
+  10 * 1024 * 1024,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'audio/mpeg', 'audio/mp4', 'audio/aac', 'audio/wav', 'audio/ogg', 'audio/webm']::text[]
+)
+on conflict (id) do nothing;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects' and policyname = 'keepsakes_read'
+  ) then
+    execute $policy$
+      create policy "keepsakes_read"
+      on storage.objects
+      for select
+      to authenticated
+      using (
+        bucket_id = 'keepsakes'
+        and public.universe_is_member(((storage.foldername(name))[1])::uuid)
+      )
+    $policy$;
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects' and policyname = 'keepsakes_write'
+  ) then
+    execute $policy$
+      create policy "keepsakes_write"
+      on storage.objects
+      for insert
+      to authenticated
+      with check (
+        bucket_id = 'keepsakes'
+        and public.universe_is_member(((storage.foldername(name))[1])::uuid)
+      )
+    $policy$;
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects' and policyname = 'keepsakes_delete'
+  ) then
+    execute $policy$
+      create policy "keepsakes_delete"
+      on storage.objects
+      for delete
+      to authenticated
+      using (
+        bucket_id = 'keepsakes'
+        and public.universe_is_member(((storage.foldername(name))[1])::uuid)
+      )
+    $policy$;
+  end if;
+end $$;
+
+-- Google Calendar connection (one Google account per space).
+-- RLS on with NO policies: only the edge function (service role) can read it.
+create table if not exists public.google_connections (
+  space_id uuid primary key references public.universe_spaces(id) on delete cascade,
+  refresh_token text not null,
+  connected_by uuid references auth.users(id) on delete set null,
+  updated_at timestamptz not null default now()
+);
+alter table public.google_connections enable row level security;
+revoke all on public.google_connections from anon, authenticated;

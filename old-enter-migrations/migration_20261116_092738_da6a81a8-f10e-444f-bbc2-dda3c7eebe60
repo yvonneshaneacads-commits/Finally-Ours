@@ -1,0 +1,6 @@
+update storage.buckets
+set allowed_mime_types = array[
+  'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+  'audio/mpeg', 'audio/mp4', 'audio/aac', 'audio/wav', 'audio/ogg', 'audio/webm'
+]::text[]
+where id = 'keepsakes';

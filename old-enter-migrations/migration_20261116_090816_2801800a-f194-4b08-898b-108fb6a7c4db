@@ -1,0 +1,60 @@
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'keepsakes',
+  'keepsakes',
+  false,
+  10 * 1024 * 1024,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']::text[]
+)
+on conflict (id) do nothing;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects' and policyname = 'keepsakes_read'
+  ) then
+    execute $policy$
+      create policy "keepsakes_read"
+      on storage.objects
+      for select
+      to authenticated
+      using (
+        bucket_id = 'keepsakes'
+        and public.universe_is_member(((storage.foldername(name))[1])::uuid)
+      )
+    $policy$;
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects' and policyname = 'keepsakes_write'
+  ) then
+    execute $policy$
+      create policy "keepsakes_write"
+      on storage.objects
+      for insert
+      to authenticated
+      with check (
+        bucket_id = 'keepsakes'
+        and public.universe_is_member(((storage.foldername(name))[1])::uuid)
+      )
+    $policy$;
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects' and policyname = 'keepsakes_delete'
+  ) then
+    execute $policy$
+      create policy "keepsakes_delete"
+      on storage.objects
+      for delete
+      to authenticated
+      using (
+        bucket_id = 'keepsakes'
+        and public.universe_is_member(((storage.foldername(name))[1])::uuid)
+      )
+    $policy$;
+  end if;
+end $$;

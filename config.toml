@@ -1,0 +1,10 @@
+project_id = "iifdsbwcpmfflwmvemkh"
+
+# verify_jwt is off because Google redirects the browser back to this function
+# (no Authorization header). The function checks the user's JWT itself for every
+# other action.
+[functions.google-calendar-sync]
+verify_jwt = false
+
+[functions.youtube-lookup]
+verify_jwt = true

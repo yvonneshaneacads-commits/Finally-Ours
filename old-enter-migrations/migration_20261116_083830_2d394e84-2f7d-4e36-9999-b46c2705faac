@@ -1,0 +1,1 @@
+update public.universe_spaces set data = jsonb_set(data, '{settings,verse}', '""') where id = '588fca8d-8df3-4b4c-a944-a5ec5829ba08';
